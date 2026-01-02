@@ -1,20 +1,13 @@
-# 1. Python'ın hafif bir sürümünü temel al
 FROM python:3.9-slim
-
-# 2. Çalışma klasörünü ayarla
 WORKDIR /app
 
-# 3. Sistem bağımlılıklarını yükle (scikit-learn için libgomp1 gerekli)
 RUN apt-get update && apt-get install -y \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. Kütüphane listesini kopyala ve yükle
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Kodların geri kalanını kopyala
 COPY . .
 
-# 6. Sunucuyu başlat (Google Cloud varsayılan olarak 8080 portunu dinler)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
