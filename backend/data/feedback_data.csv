@@ -1,0 +1,4 @@
+Age,Gender,Coffee_Intake,Sleep_Hours,Model_Prediction,Actual_Quality
+23,Male,1.0,8.0,Fair,Good
+23,Male,1.0,7.0,Fair,Excellent
+23,Male,1.0,7.0,Fair,Poor
