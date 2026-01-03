@@ -1,0 +1,31 @@
+steps:
+  # 1. Adım: Docker imajını oluştur (Backend klasörünün içine bak)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/caffeine-sleep-ai:$COMMIT_SHA', 
+      'backend/'
+    ]
+
+  # 2. Adım: İmajı Google Artifact Registry'ye yükle
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/caffeine-sleep-ai:$COMMIT_SHA']
+
+  # 3. Adım: Cloud Run'a otomatik dağıt
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'caffeine-sleep-ai'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/caffeine-sleep-ai:$COMMIT_SHA'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+# İŞTE O HATAYI ÇÖZEN KRİTİK KISIM BURASI
+options:
+  logging: CLOUD_LOGGING_ONLY
