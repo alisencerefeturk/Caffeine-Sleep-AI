@@ -2,7 +2,6 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# ML modelleri ve bazı kütüphaneler için gerekli sistem paketlerini kuralım
 RUN apt-get update && apt-get install -y \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
@@ -13,5 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Google Cloud Run için 8080 portunda başlatalım
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
