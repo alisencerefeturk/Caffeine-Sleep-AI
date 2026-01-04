@@ -14,7 +14,7 @@ class APIService {
         completion: @escaping (Result<APIResponse, Error>) -> Void
     ) {
         // --- URL'Yİ BURAYA GİR (Ngrok veya Localhost) ---
-        guard let url = URL(string: "https://biotic-zelda-dobsonfly.ngrok-free.dev/predict_and_advise") else { return }
+        guard let url = URL(string: "https://caffeine-sleep-ai-1073956464936.europe-west1.run.app/predict_and_advise") else { return }
         
         let requestData: [String: Any] = [
             "age": Int(age), "gender": gender, "coffee_intake": coffee, "bmi": bmi,

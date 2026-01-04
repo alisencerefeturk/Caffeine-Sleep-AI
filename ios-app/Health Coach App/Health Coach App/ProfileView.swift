@@ -61,13 +61,13 @@ struct ProfileView: View {
                 // GÜNLÜK HATIRLATICI
                 Section(header: Text("Bildirimler")) {
                     Toggle("Günlük Hatırlatıcı", isOn: $isNotificationEnabled)
-                        .onChange(of: isNotificationEnabled) { value in
-                            NotificationManager.shared.scheduleDailyReminder(at: notificationTime, isEnabled: value)
+                        .onChange(of: isNotificationEnabled) { _, newValue in
+                            NotificationManager.shared.scheduleDailyReminder(at: notificationTime, isEnabled: newValue)
                         }
                     
                     if isNotificationEnabled {
                         DatePicker("Saat Seçimi", selection: $notificationTime, displayedComponents: .hourAndMinute)
-                            .onChange(of: notificationTime) { newTime in
+                            .onChange(of: notificationTime) { _, newTime in
                                 NotificationManager.shared.scheduleDailyReminder(at: newTime, isEnabled: true)
                             }
                     }
@@ -80,3 +80,4 @@ struct ProfileView: View {
         }
     }
 }
+
