@@ -13,20 +13,18 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_PATH = BASE_DIR / "data" / "synthetic_coffee_health_10000.csv"
 MODEL_DIR = BASE_DIR / "models"
 
-# 1. Veri Yükleme
+
 df = pd.read_csv(DATA_PATH)
 
-# Hedef Değişken (Uyku Kalitesi) - LabelEncoder kullanmaya devam ediyoruz çünkü bu y (hedef)
-le_target = LabelEncoder()
+# Encode Target
 df['Sleep_Quality'] = le_target.fit_transform(df['Sleep_Quality'])
 
-# 2. Pipeline Tanımlama
-# Sayısal ve Kategorik Değişkenleri Ayır
+# Separate features
 numeric_features = ["Age", "Coffee_Intake", "BMI", "Physical_Activity_Hours", "Smoking", "Alcohol_Consumption"]
 categorical_features = ["Gender"]
 ordinal_features = ["Stress_Level"]
 
-# Stress Level için sıralama
+# Stress Level order
 stress_order = [['Low', 'Medium', 'High']]
 
 preprocessor = ColumnTransformer(
@@ -37,27 +35,26 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# RandomForest Modeli
+# RandomForest Model
 rf = RandomForestClassifier(random_state=42, class_weight='balanced')
 
-# Pipeline Oluşturma
+# Create Pipeline
 pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
     ('classifier', rf)
 ])
 
-# 3. Model Eğitimi için Veri Hazırlığı
-# Pipeline kullandığımız için burada manuel encoding yapmıyoruz!
-X = df.drop(columns=['Sleep_Quality', 'Sleep_Hours']) # Sleep_Hours eğitimde kullanılmıyor
+
+X = df.drop(columns=['Sleep_Quality', 'Sleep_Hours'])
 y = df['Sleep_Quality']
 
-# Veri setindeki sınıf dağılımını kontrol et
+# Check class distribution
 print("Sınıf Dağılımı (Orijinal):")
 print(y.value_counts())
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 4. Grid Search
+
 param_grid = {
     'classifier__n_estimators': [50, 100, 200],
     'classifier__max_depth': [None, 10, 20],
@@ -76,7 +73,7 @@ best_pipeline = grid_search.best_estimator_
 print(f"En iyi parametreler: {grid_search.best_params_}")
 
 # 5. Değerlendirme
-# Pipeline predict metodunda preprocessing'i otomatik yapar
+
 train_preds = best_pipeline.predict(X_train)
 test_preds = best_pipeline.predict(X_test)
 
@@ -92,12 +89,12 @@ print(confusion_matrix(y_test, test_preds))
 
 # 6. Kaydetme
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
-# Tüm pipeline'ı kaydediyoruz
+# Save pipeline
 joblib.dump(best_pipeline, MODEL_DIR / "model_pipeline.pkl")
-# Target encoder'ı ayrıca kaydediyoruz (inverse transform için gerekli)
+# Save target encoder
 joblib.dump(le_target, MODEL_DIR / "le_target.pkl")
 
-# Eski dosyaları temizleyelim (opsiyonel ama kafa karışıklığını önler)
+# Cleanup old files
 for f in ["uyku_modeli.pkl", "le_gender.pkl", "le_stress.pkl"]:
     if (MODEL_DIR / f).exists():
         (MODEL_DIR / f).unlink()

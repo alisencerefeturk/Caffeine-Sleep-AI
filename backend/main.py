@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-# --- AYARLAR ---
+# Settings
 load_dotenv()
 GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
 BASE_DIR = Path(__file__).resolve().parent
@@ -24,9 +24,9 @@ else:
 
 app = FastAPI(title="Caffeine Sleep Coach API")
 
-# --- MODELLERİ YÜKLE ---
+# Load Models
 def load_model_artifacts() -> tuple[Any, Any]:
-    """Pipeline ve target encoder'ı yükle."""
+    """Load pipeline and target encoder."""
     try:
         pipeline_path = MODEL_DIR / "model_pipeline.pkl"
         le_target_path = MODEL_DIR / "le_target.pkl"
@@ -42,8 +42,8 @@ def load_model_artifacts() -> tuple[Any, Any]:
 
 pipeline, le_target = load_model_artifacts()
 
-# --- VERİ TİPİ ---
-# Sleep_Hours modelde kullanılmıyor ancak kullanıcıdan alıyoruz (tavsiye için)
+# Data Models
+# Sleep_Hours collected for advice generation
 class UserData(BaseModel):
     age: int = Field(ge=0, le=120)
     gender: str
@@ -55,17 +55,13 @@ class UserData(BaseModel):
     alcohol: int = Field(ge=0, le=1)
     sleep_hours: float = Field(ge=0, le=24)
 
-# --- API ENDPOINT ---
+# API Endpoints
 @app.post("/predict_and_advise")
 def predict_and_advise(data: UserData):
     if pipeline is None or le_target is None:
         raise HTTPException(status_code=500, detail="Model sunucuda yüklü değil.")
 
-    # 1. Veri Hazırlama
-    try:
-        # DataFrame Oluşturma
-        # Pipeline sütun isimlerine göre işlem yapar, bu nedenle isimlendirme önemlidir.
-        # Manuel encoding'e gerek yoktur. Pipeline halleder.
+    # 1. Data Preparation
         input_data = pd.DataFrame(
             [[
                 data.age,
@@ -89,7 +85,7 @@ def predict_and_advise(data: UserData):
             ],
         )
 
-        # 2. ML Tahmini
+        # 2. ML Prediction
         prediction_idx = pipeline.predict(input_data)[0]
         prediction_label = le_target.inverse_transform([prediction_idx])[0]
 
@@ -97,11 +93,11 @@ def predict_and_advise(data: UserData):
         print(f"Tahmin Hatası: {e}")
         raise HTTPException(status_code=400, detail=f"Tahmin hatası: {str(e)}")
 
-    # 3. Gemini Tavsiyesi
+    # 3. Gemini Advice
     advice_text = "Tavsiye oluşturulamadı."
     if gemini_model:
         try:
-            # Prompt'u da zenginleştirelim
+
             prompt = f"""
             Rol: Sertifikalı Uyku Koçu.
             Kullanıcı Bilgileri:
@@ -125,7 +121,7 @@ def predict_and_advise(data: UserData):
         "advice": advice_text
     }
 
-# Geri Bildirim Modeli
+# Feedback Model
 class FeedbackData(BaseModel):
     age: int
     gender: str
@@ -136,8 +132,7 @@ class FeedbackData(BaseModel):
 
 @app.post("/submit_feedback")
 def submit_feedback(data: FeedbackData):
-    # CSV Dosyasına Kayıt (Append Mode - Ekleme Modu)
-    file_path = "data/feedback_data.csv"
+    # Save to CSV (Append Mode)
     
     # Yeni veri satırı
     new_row = {
@@ -151,7 +146,7 @@ def submit_feedback(data: FeedbackData):
     
     try:
         df = pd.DataFrame([new_row])
-        # Eğer dosya yoksa başlıklarla oluştur, varsa altına ekle
+        # Create with headers if new, else append
         if not os.path.exists(file_path):
             df.to_csv(file_path, index=False)
         else:

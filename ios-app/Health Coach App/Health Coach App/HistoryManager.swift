@@ -1,23 +1,23 @@
 import Combine
 import Foundation
 
-// Geçmişteki her bir analizin modeli
+// Analysis Model
 struct AnalysisRecord: Codable, Identifiable {
     var id = UUID()
     let date: Date
     let prediction: String // Modelin tahmini
     let advice: String
     
-    // Analiz sırasındaki veriler (Geri bildirim için lazım)
+    // Analysis Data
     let age: Int
     let gender: String
     let coffee: Double
     let sleepHours: Double
     
-    // Misafir mi yoksa kendi analizi mi?
+    // Guest analysis check
     var isGuest: Bool = false
     
-    // Kullanıcının sonradan gireceği gerçek durum (Opsiyonel)
+    // Actual status (Optional)
     var userRating: String?
 }
 
@@ -28,30 +28,30 @@ class HistoryManager: ObservableObject {
         loadHistory()
     }
     
-    // Yeni kayıt ekle
+    // Add record
     func addRecord(_ record: AnalysisRecord) {
-        history.insert(record, at: 0) // En başa ekle
+        history.insert(record, at: 0)
         saveHistory()
     }
     
-    // Geri bildirimi güncelle
+    // Update feedback
     func updateRating(id: UUID, rating: String) {
         if let index = history.firstIndex(where: { $0.id == id }) {
             history[index].userRating = rating
             saveHistory()
             
-            // Backend'e gönder
+            // Send to backend
             sendFeedbackToBackend(record: history[index], rating: rating)
         }
     }
     
-    // Kayıt sil
+    // Remove record
     func removeRecord(id: UUID) {
         history.removeAll { $0.id == id }
         saveHistory()
     }
     
-    // --- Dosya Kayıt İşlemleri (JSON) ---
+    // File Storage
     private func saveHistory() {
         if let encoded = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(encoded, forKey: "AnalysisHistory")
@@ -65,9 +65,9 @@ class HistoryManager: ObservableObject {
         }
     }
     
-    // --- Backend'e Feedback Gönderme ---
+    // Backend Feedback
     private func sendFeedbackToBackend(record: AnalysisRecord, rating: String) {
-        // URL'Yİ GÜNCELLEMEYİ UNUTMA
+        // Update URL
         guard let url = URL(string: "https://biotic-zelda-dobsonfly.ngrok-free.dev/submit_feedback") else { return }
         
         let body: [String: Any] = [

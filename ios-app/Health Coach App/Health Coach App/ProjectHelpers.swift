@@ -1,19 +1,19 @@
 import SwiftUI
 
-// --- 1. VERİ MODELLERİ ---
+// Data Models
 struct APIResponse: Codable {
     let sleep_quality: String
     let advice: String
 }
 
-// --- 2. API SERVİSİ (Static Fonksiyon) ---
+// API Service
 class APIService {
     static func performAnalysis(
         age: Double, gender: String, coffee: Double, bmi: Double,
         stress: String, activity: Double, smoke: Bool, alcohol: Bool, sleep: Double,
         completion: @escaping (Result<APIResponse, Error>) -> Void
     ) {
-        // --- URL'Yİ BURAYA GİR (Ngrok veya Localhost) ---
+        // API URL
         guard let url = URL(string: "https://caffeine-sleep-ai-1073956464936.europe-west1.run.app/predict_and_advise") else { return }
         
         let requestData: [String: Any] = [
@@ -46,9 +46,9 @@ class APIService {
     }
 }
 
-// --- 3. ORTAK TASARIM ELEMANLARI ---
+// UI Components
 
-// Çeviri Yardımcısı
+// Translation Helper
 func getTurkishQuality(_ quality: String) -> String {
     switch quality {
     case "Poor": return "Kötü"
@@ -59,7 +59,7 @@ func getTurkishQuality(_ quality: String) -> String {
     }
 }
 
-// Renk Seçicisi
+// Color Selector
 func getQualityColor(_ quality: String) -> Color {
     switch quality {
     case "Poor": return .red
@@ -70,7 +70,7 @@ func getQualityColor(_ quality: String) -> Color {
     }
 }
 
-// Sonuç Gösterme Ekranı (Her yerden çağrılabilir)
+// Result View
 struct ResultView: View {
     let quality: String
     let advice: String
@@ -78,7 +78,7 @@ struct ResultView: View {
     
     var body: some View {
         ZStack {
-            // Arkaplan: Sistem temasına duyarlı
+            // Background
             Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 25) {
@@ -88,21 +88,21 @@ struct ResultView: View {
                     .padding(.top)
                     .foregroundColor(.primary)
                 
-                // Sonuç Kartı (Yuvarlatılmış Dikdörtgen)
+                // Result Card
                 VStack {
                     Text(getTurkishQuality(quality))
                         .font(.system(size: 44, weight: .heavy))
                         .foregroundColor(.white)
-                        .padding(.vertical, 30) // Dikey boşluk
-                        .padding(.horizontal, 50) // Yatay boşluk
+                        .padding(.vertical, 30)
+                        .padding(.horizontal, 50)
                 }
                 .background(
                     RoundedRectangle(cornerRadius: 30)
-                        .fill(getQualityColor(quality).gradient) // Modern Gradyan
+                        .fill(getQualityColor(quality).gradient)
                         .shadow(radius: 10, y: 5)
                 )
                 
-                // Tavsiye Alanı (Glassmorphism & Adaptive)
+                // Advice Area
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
@@ -117,14 +117,14 @@ struct ResultView: View {
                         
                         Text(advice)
                             .font(.body)
-                            .foregroundColor(.primary) // Koyu modda beyaz, açık modda siyah olur
+                            .foregroundColor(.primary)
                             .lineSpacing(4)
                             .padding(.top, 5)
                     }
                     .padding(20)
                     .background(
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(Color(UIColor.secondarySystemBackground)) // Adaptive gri/koyu
+                            .fill(Color(UIColor.secondarySystemBackground))
                     )
                 }
                 .padding(.horizontal)
@@ -147,24 +147,24 @@ struct ResultView: View {
     }
 }
 
-// Kahve miktarına göre ikon seçen fonksiyon
+// Coffee Icon helper
 func getCoffeeIcon(_ amount: Double) -> String {
     if amount <= 1.0 {
-        return "cup.and.saucer.fill" // Türk kahvesi / Espresso fincanı
+        return "cup.and.saucer.fill"
     } else if amount <= 3.0 {
         return "mug.fill" // Kupa
     } else {
-        return "takeoutbag.and.cup.and.straw.fill" // Kahve bağımlısı
+        return "takeoutbag.and.cup.and.straw.fill"
     }
 }
 
-// Aktivite saatine göre ikon seçen fonksiyon
+// Activity Icon helper
 func getActivityIcon(_ amount: Double) -> String {
     if amount < 1.0 {
-        return "figure.walk" // Yürüyüş
+        return "figure.walk"
     } else if amount < 2.5 {
-        return "figure.run" // Koşu
+        return "figure.run"
     } else {
-        return "bolt.heart.fill" // Yüksek Efor / Kardiyo
+        return "bolt.heart.fill"
     }
 }

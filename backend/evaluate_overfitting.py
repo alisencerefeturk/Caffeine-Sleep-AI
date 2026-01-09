@@ -12,12 +12,11 @@ MODEL_DIR = BASE_DIR / "models"
 # Load Data
 df = pd.read_csv(DATA_PATH)
 
-# Target Encoding (We need this to compare with y)
+# Target Encoding
 le_target = joblib.load(MODEL_DIR / "le_target.pkl")
 df['Sleep_Quality'] = le_target.transform(df['Sleep_Quality'])
 
-# Features (Match training pipeline input)
-# Note: Sleep_Hours is NOT in the feature set used for training
+# Note: Sleep_Hours is excluded from training features
 features = [
     "Age", "Gender", "Coffee_Intake", "BMI",
     "Stress_Level", "Physical_Activity_Hours",
@@ -35,7 +34,7 @@ pipeline = joblib.load(MODEL_DIR / "model_pipeline.pkl")
 print("Model pipeline loaded.")
 
 # Evaluation using the pipeline
-# Pipeline handles preprocessing internally!
+
 train_preds = pipeline.predict(X_train)
 test_preds = pipeline.predict(X_test)
 

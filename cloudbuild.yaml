@@ -26,6 +26,5 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
 
-# İŞTE O HATAYI ÇÖZEN KRİTİK KISIM BURASI
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -1,33 +1,32 @@
 import SwiftUI
 
 struct ContentView: View {
-    // Paylaşılan Geçmiş Yöneticisi
-    @StateObject var historyManager = HistoryManager()
+    // Shared History Manager
     
     var body: some View {
         TabView {
-            // 1. Sekme: Günlük (DailyCheckView'i aşağıda tanımlayacağız veya ayrı dosya yapabilirsin, şimdilik buraya ekliyorum)
+            // 1. Daily Tab
             DailyCheckView()
                 .tabItem {
                     Image(systemName: "house.fill")
                     Text("Bugün")
                 }
             
-            // 2. Sekme: Profil
+            // 2. Profile Tab
             ProfileView()
                 .tabItem {
                     Image(systemName: "person.crop.circle.fill")
                     Text("Profil")
                 }
             
-            // 3. Sekme: Misafir
+            // 3. Guest Tab
             GuestView()
                 .tabItem {
                     Image(systemName: "person.2.fill")
                     Text("Misafir")
                 }
             
-            // 4. Sekme: Geçmiş
+            // 4. History Tab
             HistoryView()
                 .tabItem {
                     Image(systemName: "clock.arrow.circlepath")
@@ -39,12 +38,12 @@ struct ContentView: View {
     }
 }
 
-// GÜNLÜK KONTROL SAYFASI (Home Screen) 
+// Daily Check View 
 struct DailyCheckView: View {
-    // Paylaşılan Geçmiş Yöneticisi
+    // Shared Manager
     @EnvironmentObject var historyManager: HistoryManager
     
-    // Profil Verilerini Otomatik Çek
+    // Fetch Profile Data
     @AppStorage("userAge") private var age: Double = 22
     @AppStorage("userGender") private var gender = "Male"
     @AppStorage("userBMI") private var bmi: Double = 24.0
@@ -60,52 +59,49 @@ struct DailyCheckView: View {
     @State private var resultData: APIResponse?
     @State private var isLoading = false
     
-    // 🌑 Dark Mode için Dinamik Renk Tanımı
-    // Bu renk Gündüz Beyaz, Gece Koyu Gri olur.
+    // Dynamic Card Background
     let cardBackground = Color(UIColor.secondarySystemGroupedBackground)
     
     var body: some View {
         NavigationView {
             ZStack {
-                // Arka plan rengi (Gündüz açık gri, Gece tam siyah)
+                // Background Color
                 Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.all)
                 
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Bilgi Kartı
+                        // Info Card
                         HStack {
                             VStack(alignment: .leading) {
                                 Text("Hoş geldin!")
                                     .font(.caption)
-                                    .foregroundColor(.secondary) // Otomatik gri tonu
+                                    .foregroundColor(.secondary)
                                 Text("Profilin: \(Int(age)) Yaş, BMI \(String(format: "%.1f", bmi))")
                                     .font(.headline)
-                                    .foregroundColor(.primary) // Gündüz Siyah, Gece Beyaz
+                                    .foregroundColor(.primary)
                             }
                             Spacer()
                         }
                         .padding()
-                        .background(cardBackground) // <--- İŞTE SİHİR BURADA
+                        .background(cardBackground)
                         .cornerRadius(10)
                         .padding(.horizontal)
-                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1) // Hafif gölge
+                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
                         
-                        // Hızlı Girdiler
-                        VStack(spacing: 15) {
+                        // Quick Inputs
                                                     Text("Bugünkü Verilerin")
                                                         .font(.title2)
                                                         .bold()
                                                         .foregroundColor(.primary)
                                                     
-                                                    // 1. KAHVE KARTI (Animasyonlu)
+                                                    // 1. Coffee Card
                                                     HStack {
                                                         Image(systemName: getCoffeeIcon(coffee))
                                                             .resizable()
                                                             .scaledToFit()
                                                             .frame(height: 30)
                                                             .foregroundColor(.brown)
-                                                            // Animasyon Ekliyoruz: Değer değişince ikon zıplasın
-                                                            .animation(.spring(response: 0.5, dampingFraction: 0.6), value: coffee)
+                                                            // Animation
                                                         
                                                         Text("Kahve: \(String(format: "%.1f", coffee))")
                                                             .foregroundColor(.primary)
@@ -116,7 +112,7 @@ struct DailyCheckView: View {
                                                     .background(cardBackground)
                                                     .cornerRadius(10)
                                                     
-                                                    // 2. UYKU KARTI
+                                                    // 2. Sleep Card
                                                     HStack {
                                                         Image(systemName: "moon.stars.fill")
                                                             .resizable()
@@ -133,13 +129,12 @@ struct DailyCheckView: View {
                                                     .background(cardBackground)
                                                     .cornerRadius(10)
                                                     
-                                                    // 3. AKTİVİTE KARTI (Animasyonlu & Renk Değişen)
+                                                    // 3. Activity Card
                                                     HStack {
                                                         Image(systemName: getActivityIcon(activity))
                                                             .resizable()
                                                             .scaledToFit()
                                                             .frame(height: 30)
-                                                            // Az spor: Yeşil, Çok spor: Kırmızı/Turuncu
                                                             .foregroundColor(activity > 4.5 ? .red : .green)
                                                             .animation(.spring(response: 0.5, dampingFraction: 0.6), value: activity)
                                                         
@@ -188,7 +183,7 @@ struct DailyCheckView: View {
                 self.resultData = response
                 self.showResult = true
                 
-                // Geçmişe Kaydet
+                // Save to History
                 let record = AnalysisRecord(
                     date: Date(),
                     prediction: response.sleep_quality,
@@ -200,7 +195,7 @@ struct DailyCheckView: View {
                 )
                 historyManager.addRecord(record)
                 
-                // Görev Tamamlandı: Bildirimi İptal Et
+                // Task Completed
                 NotificationManager.shared.completeTaskForToday()
                 
             case .failure(let error):
