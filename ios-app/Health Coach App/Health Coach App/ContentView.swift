@@ -1,7 +1,9 @@
 import SwiftUI
 
+// Root ContentView hosts the TabView and provides shared environment objects
 struct ContentView: View {
-    // Shared History Manager
+    // Provide HistoryManager to all child views
+    @StateObject private var historyManager = HistoryManager()
     
     var body: some View {
         TabView {
@@ -34,13 +36,13 @@ struct ContentView: View {
                 }
         }
         .accentColor(.purple)
-        .environmentObject(historyManager) // Tüm alt view'lara erişim
+        .environmentObject(historyManager)
     }
 }
 
 // Daily Check View 
 struct DailyCheckView: View {
-    // Shared Manager
+    // Shared Manager from environment
     @EnvironmentObject var historyManager: HistoryManager
     
     // Fetch Profile Data
@@ -89,65 +91,62 @@ struct DailyCheckView: View {
                         .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
                         
                         // Quick Inputs
-                                                    Text("Bugünkü Verilerin")
-                                                        .font(.title2)
-                                                        .bold()
-                                                        .foregroundColor(.primary)
-                                                    
-                                                    // 1. Coffee Card
-                                                    HStack {
-                                                        Image(systemName: getCoffeeIcon(coffee))
-                                                            .resizable()
-                                                            .scaledToFit()
-                                                            .frame(height: 30)
-                                                            .foregroundColor(.brown)
-                                                            // Animation
-                                                        
-                                                        Text("Kahve: \(String(format: "%.1f", coffee))")
-                                                            .foregroundColor(.primary)
-                                                        Spacer()
-                                                        Stepper("", value: $coffee, in: 0...10, step: 0.5).labelsHidden()
-                                                    }
-                                                    .padding()
-                                                    .background(cardBackground)
-                                                    .cornerRadius(10)
-                                                    
-                                                    // 2. Sleep Card
-                                                    HStack {
-                                                        Image(systemName: "moon.stars.fill")
-                                                            .resizable()
-                                                            .scaledToFit()
-                                                            .frame(height: 30)
-                                                            .foregroundColor(.purple)
-                                                        
-                                                        Text("Hedef Uyku: \(String(format: "%.1f", sleep))")
-                                                            .foregroundColor(.primary)
-                                                        Spacer()
-                                                        Slider(value: $sleep, in: 4...12, step: 0.5).frame(width: 120)
-                                                    }
-                                                    .padding()
-                                                    .background(cardBackground)
-                                                    .cornerRadius(10)
-                                                    
-                                                    // 3. Activity Card
-                                                    HStack {
-                                                        Image(systemName: getActivityIcon(activity))
-                                                            .resizable()
-                                                            .scaledToFit()
-                                                            .frame(height: 30)
-                                                            .foregroundColor(activity > 4.5 ? .red : .green)
-                                                            .animation(.spring(response: 0.5, dampingFraction: 0.6), value: activity)
-                                                        
-                                                        Text("Aktivite: \(String(format: "%.1f", activity))")
-                                                            .foregroundColor(.primary)
-                                                        Spacer()
-                                                        Stepper("", value: $activity, in: 0...10, step: 0.5).labelsHidden()
-                                                    }
-                                                    .padding()
-                                                    .background(cardBackground)
-                                                    .cornerRadius(10)
-                                                }
-                                                .padding(.horizontal)
+                        Text("Bugünkü Verilerin")
+                            .font(.title2)
+                            .bold()
+                            .foregroundColor(.primary)
+                        
+                        // 1. Coffee Card
+                        HStack {
+                            Image(systemName: getCoffeeIcon(coffee))
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 30)
+                                .foregroundColor(.brown)
+                            
+                            Text("Kahve: \(String(format: "%.1f", coffee))")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Stepper("", value: $coffee, in: 0...10, step: 0.5).labelsHidden()
+                        }
+                        .padding()
+                        .background(cardBackground)
+                        .cornerRadius(10)
+                        
+                        // 2. Sleep Card
+                        HStack {
+                            Image(systemName: "moon.stars.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 30)
+                                .foregroundColor(.purple)
+                            
+                            Text("Hedef Uyku: \(String(format: "%.1f", sleep))")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Slider(value: $sleep, in: 4...12, step: 0.5).frame(width: 120)
+                        }
+                        .padding()
+                        .background(cardBackground)
+                        .cornerRadius(10)
+                        
+                        // 3. Activity Card
+                        HStack {
+                            Image(systemName: getActivityIcon(activity))
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 30)
+                                .foregroundColor(activity > 4.5 ? .red : .green)
+                                .animation(.spring(response: 0.5, dampingFraction: 0.6), value: activity)
+                            
+                            Text("Aktivite: \(String(format: "%.1f", activity))")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Stepper("", value: $activity, in: 0...10, step: 0.5).labelsHidden()
+                        }
+                        .padding()
+                        .background(cardBackground)
+                        .cornerRadius(10)
                         
                         Button(action: analyzeDaily) {
                             HStack {
@@ -160,6 +159,7 @@ struct DailyCheckView: View {
                         .padding()
                         .disabled(isLoading)
                     }
+                    .padding(.horizontal)
                 }
                 .navigationTitle("Ana Sayfa 🏠")
             }
@@ -168,6 +168,24 @@ struct DailyCheckView: View {
                     ResultView(quality: res.sleep_quality, advice: res.advice)
                 }
             }
+        }
+    }
+    
+    private func getCoffeeIcon(_ amount: Double) -> String {
+        switch amount {
+        case 0: return "cup.and.saucer"
+        case 0..<2: return "cup.and.saucer.fill"
+        case 2..<5: return "mug.fill"
+        default: return "flame"
+        }
+    }
+    
+    private func getActivityIcon(_ level: Double) -> String {
+        switch level {
+        case 0..<2: return "figure.walk"
+        case 2..<5: return "figure.run"
+        case 5..<8: return "figure.strengthtraining.traditional"
+        default: return "bolt.fill"
         }
     }
     

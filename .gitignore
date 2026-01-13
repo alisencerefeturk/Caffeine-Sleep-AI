@@ -3,7 +3,6 @@ __pycache__/
 *.py[cod]
 venv/
 .env
-cloudbuild.yaml
 
 # MacOS
 .AppleDouble
