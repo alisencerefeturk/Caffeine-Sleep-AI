@@ -20,7 +20,7 @@ FEEDBACK_FILE = BASE_DIR / "data" / "feedback_data.csv"
 if GENAI_API_KEY:
     genai.configure(api_key=GENAI_API_KEY)
     # 2026 itibarıyla güncel model ismini kullandığından emin ol
-    gemini_model = genai.GenerativeModel("gemini-1.5-flash") 
+    gemini_model = genai.GenerativeModel("gemini-2.5-flash-lite") 
 else:
     gemini_model = None
     print("UYARI: API Key bulunamadı!")
@@ -62,7 +62,7 @@ def predict_and_advise(data: UserData):
     if pipeline is None or le_target is None:
         raise HTTPException(status_code=500, detail="Model sunucuda yüklü değil.")
 
-    try: # <--- EKSİK OLAN VE HATAYA YOL AÇAN SATIR BURASIYDI
+    try:
         # 1. Data Preparation
         input_data = pd.DataFrame(
             [[
