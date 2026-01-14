@@ -133,12 +133,12 @@ class FeedbackData(BaseModel):
 @app.post("/submit_feedback")
 def submit_feedback(data: FeedbackData):
     new_row = {
-        "Age": data.age,
-        "Gender": data.gender,
-        "Coffee_Intake": data.coffee,
-        "Sleep_Hours": data.sleep_hours,
-        "Model_Prediction": data.model_prediction,
-        "Actual_Quality": data.user_actual
+        "age": data.age,
+        "gender": data.gender,
+        "coffee": data.coffee,
+        "sleep_hours": data.sleep_hours,
+        "model_prediction": data.model_prediction,
+        "user_actual": data.user_actual
     }
     
     try:
