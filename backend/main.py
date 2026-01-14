@@ -7,6 +7,7 @@ import joblib
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 # --- AYARLAR ---
@@ -23,6 +24,14 @@ else:
     print("UYARI: API Key bulunamadı!")
 
 app = FastAPI(title="Caffeine Sleep Coach API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- MODELLERİ YÜKLE ---
 def load_model_artifacts() -> tuple[Any, Any]:
@@ -137,7 +146,10 @@ class FeedbackData(BaseModel):
 @app.post("/submit_feedback")
 def submit_feedback(data: FeedbackData):
     # CSV Dosyasına Kayıt (Append Mode - Ekleme Modu)
-    file_path = "data/feedback_data.csv"
+    # Use BASE_DIR to ensure the path is correct regardless of where the script is run from
+    feedback_dir = BASE_DIR / "data"
+    feedback_dir.mkdir(parents=True, exist_ok=True) # Ensure directory exists
+    file_path = feedback_dir / "feedback_data.csv"
     
     # Yeni veri satırı
     new_row = {
@@ -152,11 +164,12 @@ def submit_feedback(data: FeedbackData):
     try:
         df = pd.DataFrame([new_row])
         # Eğer dosya yoksa başlıklarla oluştur, varsa altına ekle
-        if not os.path.exists(file_path):
+        if not file_path.exists():
             df.to_csv(file_path, index=False)
         else:
             df.to_csv(file_path, mode='a', header=False, index=False)
             
         return {"status": "success", "message": "Geri bildirim kaydedildi. Model iyileştirmesi için kullanılacak."}
     except Exception as e:
+        print(f"Feedback Error: {e}") # Log error to console
         raise HTTPException(status_code=500, detail=str(e))
