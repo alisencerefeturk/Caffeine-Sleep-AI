@@ -14,10 +14,13 @@ load_dotenv()
 GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = BASE_DIR / "models"
+# Feedback dosyası yolu
+FEEDBACK_FILE = BASE_DIR / "data" / "feedback_data.csv"
 
 if GENAI_API_KEY:
     genai.configure(api_key=GENAI_API_KEY)
-    gemini_model = genai.GenerativeModel("gemini-2.5-flash-lite")
+    # 2026 itibarıyla güncel model ismini kullandığından emin ol
+    gemini_model = genai.GenerativeModel("gemini-1.5-flash") 
 else:
     gemini_model = None
     print("UYARI: API Key bulunamadı!")
@@ -26,7 +29,6 @@ app = FastAPI(title="Caffeine Sleep Coach API")
 
 # Load Models
 def load_model_artifacts() -> tuple[Any, Any]:
-    """Load pipeline and target encoder."""
     try:
         pipeline_path = MODEL_DIR / "model_pipeline.pkl"
         le_target_path = MODEL_DIR / "le_target.pkl"
@@ -43,7 +45,6 @@ def load_model_artifacts() -> tuple[Any, Any]:
 pipeline, le_target = load_model_artifacts()
 
 # Data Models
-# Sleep_Hours collected for advice generation
 class UserData(BaseModel):
     age: int = Field(ge=0, le=120)
     gender: str
@@ -61,7 +62,8 @@ def predict_and_advise(data: UserData):
     if pipeline is None or le_target is None:
         raise HTTPException(status_code=500, detail="Model sunucuda yüklü değil.")
 
-    # 1. Data Preparation
+    try: # <--- EKSİK OLAN VE HATAYA YOL AÇAN SATIR BURASIYDI
+        # 1. Data Preparation
         input_data = pd.DataFrame(
             [[
                 data.age,
@@ -97,7 +99,6 @@ def predict_and_advise(data: UserData):
     advice_text = "Tavsiye oluşturulamadı."
     if gemini_model:
         try:
-
             prompt = f"""
             Rol: Sertifikalı Uyku Koçu.
             Kullanıcı Bilgileri:
@@ -121,20 +122,16 @@ def predict_and_advise(data: UserData):
         "advice": advice_text
     }
 
-# Feedback Model
 class FeedbackData(BaseModel):
     age: int
     gender: str
     coffee: float
     sleep_hours: float
-    model_prediction: str # Model ne demişti?
-    user_actual: str      # Kullanıcı aslında nasıl uyudu?
+    model_prediction: str 
+    user_actual: str      
 
 @app.post("/submit_feedback")
 def submit_feedback(data: FeedbackData):
-    # Save to CSV (Append Mode)
-    
-    # Yeni veri satırı
     new_row = {
         "Age": data.age,
         "Gender": data.gender,
@@ -145,13 +142,15 @@ def submit_feedback(data: FeedbackData):
     }
     
     try:
+        # data klasörünün varlığından emin ol
+        FEEDBACK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        
         df = pd.DataFrame([new_row])
-        # Create with headers if new, else append
-        if not os.path.exists(file_path):
-            df.to_csv(file_path, index=False)
+        if not FEEDBACK_FILE.exists():
+            df.to_csv(FEEDBACK_FILE, index=False)
         else:
-            df.to_csv(file_path, mode='a', header=False, index=False)
+            df.to_csv(FEEDBACK_FILE, mode='a', header=False, index=False)
             
-        return {"status": "success", "message": "Geri bildirim kaydedildi. Model iyileştirmesi için kullanılacak."}
+        return {"status": "success", "message": "Geri bildirim kaydedildi."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
