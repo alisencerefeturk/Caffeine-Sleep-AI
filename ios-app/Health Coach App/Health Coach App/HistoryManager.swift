@@ -68,7 +68,7 @@ class HistoryManager: ObservableObject {
     // --- Backend'e Feedback Gönderme ---
     private func sendFeedbackToBackend(record: AnalysisRecord, rating: String) {
         // URL'Yİ GÜNCELLEMEYİ UNUTMA
-        guard let url = URL(string: "https://biotic-zelda-dobsonfly.ngrok-free.dev/submit_feedback") else { return }
+        guard let url = URL(string: "https://caffeine-sleep-ai-1073956464936.europe-west1.run.app/submit_feedback") else { return }
         
         let body: [String: Any] = [
             "age": record.age,
