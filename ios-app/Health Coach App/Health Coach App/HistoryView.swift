@@ -101,7 +101,6 @@ struct HistoryView: View {
     }
 }
 
-// DETAY GÖRÜNÜMÜ
 struct RecordDetailView: View {
     let record: AnalysisRecord
     @Environment(\.presentationMode) var presentationMode
@@ -157,10 +156,9 @@ struct LabeledRow: View {
     }
 }
 
-// Yardımcı Buton (Türkçe görünüm, API'ye İngilizce gönder)
 struct FeedbackButton: View {
-    let title: String    // Görünen metin (Türkçe)
-    let apiValue: String // API'ye gönderilen değer (İngilizce)
+    let title: String
+    let apiValue: String
     let color: Color
     let record: AnalysisRecord
     @EnvironmentObject var historyManager: HistoryManager

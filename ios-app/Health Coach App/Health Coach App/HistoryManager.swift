@@ -5,7 +5,7 @@ import Foundation
 struct AnalysisRecord: Codable, Identifiable {
     var id = UUID()
     let date: Date
-    let prediction: String // Modelin tahmini
+    let prediction: String
     let advice: String
     
     // Analiz sırasındaki veriler (Geri bildirim için lazım)
