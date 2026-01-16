@@ -145,11 +145,12 @@ class FeedbackData(BaseModel):
 
 @app.post("/submit_feedback")
 def submit_feedback(data: FeedbackData):
-    # CSV Dosyasına Kayıt (Append Mode - Ekleme Modu)
-    # Use BASE_DIR to ensure the path is correct regardless of where the script is run from
-    feedback_dir = BASE_DIR / "data"
-    feedback_dir.mkdir(parents=True, exist_ok=True) # Ensure directory exists
-    file_path = feedback_dir / "feedback_data.csv"
+    from google.cloud import storage
+    from io import StringIO
+    
+    # GCS Ayarları
+    BUCKET_NAME = "caffeine-sleep-ai-feedback"  # Bucket adı
+    BLOB_NAME = "feedback_data.csv"
     
     # Yeni veri satırı
     new_row = {
@@ -162,14 +163,32 @@ def submit_feedback(data: FeedbackData):
     }
     
     try:
-        df = pd.DataFrame([new_row])
-        # Eğer dosya yoksa başlıklarla oluştur, varsa altına ekle
-        if not file_path.exists():
-            df.to_csv(file_path, index=False)
+        # GCS client
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(BLOB_NAME)
+        
+        # Mevcut CSV'yi oku (varsa)
+        existing_data = ""
+        if blob.exists():
+            existing_data = blob.download_as_text()
+        
+        # Yeni satırı ekle
+        new_df = pd.DataFrame([new_row])
+        
+        if existing_data:
+            # Mevcut veriye ekle
+            existing_df = pd.read_csv(StringIO(existing_data))
+            combined_df = pd.concat([existing_df, new_df], ignore_index=True)
         else:
-            df.to_csv(file_path, mode='a', header=False, index=False)
+            # İlk kayıt
+            combined_df = new_df
+        
+        # GCS'e yaz
+        csv_content = combined_df.to_csv(index=False)
+        blob.upload_from_string(csv_content, content_type="text/csv")
             
         return {"status": "success", "message": "Geri bildirim kaydedildi. Model iyileştirmesi için kullanılacak."}
     except Exception as e:
-        print(f"Feedback Error: {e}") # Log error to console
+        print(f"Feedback Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
